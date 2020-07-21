@@ -9,12 +9,11 @@ struct node
   ~node();
   node *r, *l;
   int val;
-  int balance;
   int height;
   void dump(std::ostream &, std::string, std::string) const;
 };
 
-node::node(int val) : r(nullptr), l(nullptr), val(val), balance(0), height(1)
+node::node(int val) : r(nullptr), l(nullptr), val(val), height(1)
 {
 
 }
@@ -35,6 +34,7 @@ public:
   bool erase(int i);
   bool contains(int i) const;
   void pretty_print(std::ostream &os) const;
+  /** Debug function that checks if tree respects avl balance */
   void check_balance(node *n = nullptr) const;
 private:
   node* rebalance_insert(node *);
@@ -94,43 +94,53 @@ int avl::get_balance(node *n) const
 
 node* avl::rebalance_insert(node *n)
 {
+  bool rebalanced = false;
   if(get_balance(n) < -1)
   {
     if(n->l->r && n->l->r->val > n->l->val)
       n->l = left_rot(n->l);
     n = right_rot(n);
+    rebalanced = true;
   }
   if(get_balance(n) > 1)
   {
     if(n->r->l && n->r->l->val > n->r->val)
       n->r = right_rot(n->r);
     n = left_rot(n);
+    rebalanced = true;
   }
-  update_height(n->r);
-  update_height(n->l);
-  update_height(n);
+  if(rebalanced)
+  {
+    update_height(n->r);
+    update_height(n->l);
+    update_height(n);
+  }
   return n;
 }
 
 node* avl::rebalance_erase(node *n)
 {
+  bool rebalanced = false;
   if(get_balance(n) < -1)
   {
     if(n->l && get_balance(n->l) > 0)
       n->l = left_rot(n->l);
     n = right_rot(n);
+    rebalanced = true;
   }
   if(get_balance(n) > 1)
   {
     if(n->r && get_balance(n->r) < 0)
       n->r = right_rot(n->r);
     n = left_rot(n);
+    rebalanced = true;
   }
-
-  update_height(n->r);
-  update_height(n->l);
-  update_height(n);
-
+  if(rebalanced)
+  {
+    update_height(n->r);
+    update_height(n->l);
+    update_height(n);
+  }
   return n;
 }
 
@@ -157,31 +167,29 @@ bool avl::insert(int i)
 
 bool avl::_insert(int val, node **n)
 {
+  /* Here we found the place to insert new node */
   if(!*n)
   {
     *n = new node(val);
     return true;
   }
   bool ret;
+  /* Go right or left */
   if((*n)->val < val)
-  {
     ret = _insert(val, &(*n)->r);
-    (*n)->balance = get_balance(*n); 
-  }
   else if((*n)->val > val)
-  {
     ret = _insert(val, &(*n)->l);
-  }
   else
     return false;
 
+  /* When travelling up from recursion, update heights of all passed nodes */
   update_height(*n);
-
   *n = rebalance_insert(*n);
 
   return ret;
 }
 
+/* Wrapper function for recursive erase */
 bool avl::erase(int val)
 {
   return _erase(val, &root);
@@ -190,6 +198,7 @@ bool avl::erase(int val)
 bool avl::_erase(int val, node **n)
 {
   bool res;
+  /* Traverse the tree */
   if(!*n)
     return false;
   if((*n)->val > val)
@@ -205,9 +214,16 @@ bool avl::_erase(int val, node **n)
       /* Find the leftmost node in right subtree */
       while((*n)->l)
         n = &(*n)->l;
+      /* Swap the values, bvs ordering is still valid. 
+         Mark the newfound node as the one to be deleted.
+         This one only has one children, pass it down to
+         be deleted. */
       std::swap((*n)->val, v->val);
       v = (*n);
     }
+    /* Delete a node that has one children.
+       We need to detach the pointer to children from that
+       node otherwise destructor will recursively destroy it. */
     if((*n)->l)
     {
       (*n) = (*n)->l;
@@ -218,10 +234,10 @@ bool avl::_erase(int val, node **n)
       (*n) = (*n)->r;
       v->r = nullptr;
     }
+    /* If node has no children */
     else
       (*n) = nullptr;
     
-
     delete v; 
     return true;
   }
@@ -263,7 +279,7 @@ void node::dump(std::ostream &os, std::string prefix, std::string children) cons
 #include <iostream>
 #include <set>
 
-#define TEST_SIZE 70000
+#define TEST_SIZE 50000
 
 void basic_test(void)
 {
