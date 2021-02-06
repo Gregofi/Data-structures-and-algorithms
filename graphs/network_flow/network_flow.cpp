@@ -24,9 +24,8 @@
 size_t SOURCE = 0;
 size_t SINK = 0;
 
-std::array<std::array<int, MAX_P>, MAX_P>   
-get_graph ( std::map<std::set<size_t>, size_t > & rel_order,
-            size_t & cnt_r, size_t & cnt_p)
+std::array<std::array<int, MAX_P>, MAX_P> get_graph ( std::map<std::set<size_t>, size_t > & rel_order,
+                                                      size_t & cnt_r, size_t & cnt_p)
 {
   std::array<std::array<int, MAX_P>, MAX_P> graph;
   for(auto & x : graph)
@@ -64,8 +63,7 @@ get_graph ( std::map<std::set<size_t>, size_t > & rel_order,
   return graph;
 }
 
-bool               
-get_path ( const std::array<std::array<int, MAX_P>, MAX_P> & resid_graph,
+bool get_path ( const std::array<std::array<int, MAX_P>, MAX_P> & resid_graph,
            std::array<size_t, MAX_P> & parent,
            size_t node_cnt )
 {
@@ -88,8 +86,7 @@ get_path ( const std::array<std::array<int, MAX_P>, MAX_P> & resid_graph,
   return visited[SINK];
 }
 
-void 
-bfs ( const std::array<std::array<int, MAX_P>, MAX_P> &  resid_graph,
+void bfs ( const std::array<std::array<int, MAX_P>, MAX_P> &  resid_graph,
             std::array<bool, MAX_P> & visited,
             size_t                    node_cnt )
 {
@@ -109,8 +106,7 @@ bfs ( const std::array<std::array<int, MAX_P>, MAX_P> &  resid_graph,
   }
 }
 
-int                
-main ( void )                 
+int main ( void )                 
 {
   size_t cnt_p, cnt_r;
   std::map<std::set<size_t>, size_t > rel_order;
